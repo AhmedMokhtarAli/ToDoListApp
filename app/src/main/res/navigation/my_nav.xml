@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/my_nav"
+    app:startDestination="@id/tasks">
+
+    <fragment
+        android:id="@+id/tasks"
+        android:name="com.example.todolist.Ui.Fregments.Tasks.Tasks"
+        android:label="Tasks" >
+        <action
+            android:id="@+id/action_tasks_to_add"
+            app:destination="@id/add" />
+        <action
+            android:id="@+id/action_tasks_to_update"
+            app:destination="@id/update" />
+    </fragment>
+    <fragment
+        android:id="@+id/add"
+        android:name="com.example.todolist.Ui.Fregments.Add.Add"
+        android:label="Add" >
+        <action
+            android:id="@+id/action_add_to_tasks"
+            app:destination="@id/tasks" />
+    </fragment>
+    <fragment
+        android:id="@+id/update"
+        android:name="com.example.todolist.Ui.Fregments.Update.Update"
+        android:label="Update" >
+        <action
+            android:id="@+id/action_update_to_tasks"
+            app:destination="@id/tasks" />
+        <argument
+            android:name="currentTask"
+            app:argType="com.example.todolist.model.Task" />
+    </fragment>
+</navigation>

@@ -1,60 +1,90 @@
-package com.example.todolist.Ui.Fregments
+package com.example.todolist.Ui.Fregments.Tasks
 
+import android.app.AlertDialog
 import android.os.Bundle
+import android.util.Log
+import android.view.*
+import android.widget.Toast
 import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.example.todolist.Data.SortOrder
 import com.example.todolist.R
+import com.example.todolist.ViewModel.TaskViewModel
+import com.example.todolist.databinding.FragmentTasksBinding
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import java.util.*
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
 
-/**
- * A simple [Fragment] subclass.
- * Use the [Tasks.newInstance] factory method to
- * create an instance of this fragment.
- */
+private const val TAG = "Tasks"
 class Tasks : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
-
+    private lateinit var binding: FragmentTasksBinding
+    private lateinit var taskViewModel: TaskViewModel
+    private lateinit var adapter: TaskAdapter
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_tasks, container, false)
+        binding = FragmentTasksBinding.inflate(inflater, container, false)
+
+        //init view model
+        taskViewModel = ViewModelProvider(this).get(TaskViewModel::class.java)
+
+        //init recycler view and adapter
+        val taskRecyclerView = binding.tasksRV
+        adapter = TaskAdapter(requireContext())
+        taskRecyclerView.adapter = adapter
+        taskRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+
+        //show tasks in recyclerView
+        taskViewModel.tasks.observe(viewLifecycleOwner){ tasks ->
+            adapter.setAllTasks(tasks)
+        }
+        //add task
+        binding.addTaskBtn.setOnClickListener(View.OnClickListener { findNavController().navigate(R.id.action_tasks_to_add) })
+
+        setHasOptionsMenu(true)
+
+        return binding.root
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment Tasks.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            Tasks().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.task_menu,menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when(item.itemId) {
+            R.id.delet -> {
+                deletAllusers()
+                true
             }
+            R.id.praiorty -> {
+                taskViewModel.onSortOrderSelected(SortOrder.BY_PRAIORTY)
+                true
+            }
+            R.id.dateItem -> {
+                taskViewModel.onSortOrderSelected(SortOrder.BY_DATE)
+                true
+            }
+            else ->  return super.onOptionsItemSelected(item)
+        }
+    }
+
+    private fun deletAllusers() {
+        val builder=AlertDialog.Builder(requireContext())
+        builder.setPositiveButton("Yes"){_,_ ->
+            taskViewModel.deleteAllTasks()
+            Toast.makeText(requireContext(),"Tasks successfully removed", Toast.LENGTH_LONG).show()
+        }
+        builder.setNegativeButton("No"){_,_ ->}
+        builder.setTitle("Delet tasks")
+        builder.setMessage("Are you sure you want to delet all tasks ?")
+        builder.create().show()
     }
 }

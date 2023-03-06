@@ -8,13 +8,13 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.todolist.R
 
-class AlarmReciver : BroadcastReceiver() {
+open class AlarmReciver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         val alarmIntent=Intent(context,DestniationActivity::class.java)
         intent!!.flags=Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         val pendingIntent=PendingIntent.getActivity(context,0,alarmIntent,0)
 
-        val builder=NotificationCompat.Builder(context!!,"foxandroid")
+        val builder=NotificationCompat.Builder(context!!,"TODO")
             .setSmallIcon(R.drawable.task)
             .setContentTitle("TODO")
             .setContentText("you have a new task to do")

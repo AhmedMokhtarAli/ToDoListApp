@@ -1,3 +1,14 @@
 <resources>
     <string name="app_name">ToDo List</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="details">Details</string>
+    <string name="task">Task</string>
+    <string name="save_task">Save Task</string>
+    <string name="date">Date</string>
+
+    <string-array name="praiorties">
+        <item>Heigh</item>
+        <item>Medium</item>
+        <item>Low</item>
+    </string-array>
 </resources>

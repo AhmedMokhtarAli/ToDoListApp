@@ -1,60 +1,111 @@
-package com.example.todolist.Ui.Fregments
+package com.example.todolist.Ui.Fregments.Update
 
+import android.app.AlertDialog
+import android.os.Build
 import android.os.Bundle
+import android.text.TextUtils
+import android.view.*
 import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.widget.Toast
+import androidx.annotation.RequiresApi
+import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
+import com.example.todolist.model.Task
 import com.example.todolist.R
+import com.example.todolist.Ui.TaskDatePickerDialog
+import com.example.todolist.ViewModel.TaskViewModel
+import com.example.todolist.databinding.FragmentUpdateBinding
+import java.util.*
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [Update.newInstance] factory method to
- * create an instance of this fragment.
- */
 class Update : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+    private  var binding:FragmentUpdateBinding?=null
+    private val args by navArgs<UpdateArgs>()
+    private lateinit var taskViewModel: TaskViewModel
+    private lateinit var datePickerDialog:TaskDatePickerDialog
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_update, container, false)
+        binding= FragmentUpdateBinding.inflate(inflater,container,false)
+
+        taskViewModel=ViewModelProvider(this).get(TaskViewModel::class.java)
+
+        showTaskInfo()
+
+        datePickerDialog=TaskDatePickerDialog(context,args.currentTask.date)
+
+
+        binding?.dateBtnUpdate?.setOnClickListener(View.OnClickListener { datePickerDialog.creatDatePickerDialog()?.show() })
+        binding?.updateTaskBtn?.setOnClickListener(View.OnClickListener {
+            updateTask(datePickerDialog.getDate())
+        })
+
+        setHasOptionsMenu(true)
+        return binding?.root
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment Update.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            Update().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
+    @RequiresApi(Build.VERSION_CODES.N)
+    fun updateTask(date: Date) {
+        val taskName = binding?.taskUpdateET?.editText?.text.toString()
+        val taskDetials = binding?.taskDtialsUpdateET?.editText?.text.toString()
+        val hour=binding!!.taskTimeUpdate.hour
+        val mintes=binding!!.taskTimeUpdate.minute
+
+        if (checkTask(taskName, taskDetials)) {
+            var updatedTask = Task(args.currentTask.id, taskName, taskDetials,date,hour,mintes,3)
+            taskViewModel.updateTask(updatedTask)
+            Toast.makeText(requireContext(), "task successfully updated", Toast.LENGTH_LONG).show()
+            findNavController().navigate(R.id.action_update_to_tasks)
+        } else {
+            Toast.makeText(requireContext(), "Please fill all fildes", Toast.LENGTH_LONG).show()
+        }
     }
+    private fun checkTask(taskName: String, taskDetails: String): Boolean {
+        if (TextUtils.isEmpty(taskName) || TextUtils.isEmpty(taskDetails)) {
+            return false
+        }
+        return true
+    }
+    @RequiresApi(Build.VERSION_CODES.M)
+    fun showTaskInfo()
+    {
+        binding?.taskUpdateET?.editText?.setText(args.currentTask.taskName)
+        binding?.taskDtialsUpdateET?.editText?.setText(args.currentTask.taskDtailes)
+        binding?.taskTimeUpdate?.hour=args.currentTask.hour
+        binding?.taskTimeUpdate?.minute=args.currentTask.mintes
+    }
+    override fun onDestroy() {
+        super.onDestroy()
+        binding=null
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+       inflater.inflate(R.menu.task_menu,menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if(item.itemId==R.id.delet)
+        {
+            deletTask()
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
+    private fun deletTask() {
+        val bulider = AlertDialog.Builder(requireContext())
+        bulider.setPositiveButton("Yes") { _, _ ->
+            taskViewModel.deleteTask(args.currentTask)
+            Toast.makeText(requireContext(),"Task successfully removed",Toast.LENGTH_LONG).show()
+            findNavController().navigate(R.id.action_update_to_tasks)
+        }
+        bulider.setNegativeButton("No"){_,_ ->}
+        bulider.setTitle("Delet ${args.currentTask.taskName} task")
+        bulider.setMessage("Are you sure you want to delet ${args.currentTask.taskName} ?")
+        bulider.create().show()
+    }
+
 }

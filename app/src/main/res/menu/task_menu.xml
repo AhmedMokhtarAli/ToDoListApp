@@ -8,4 +8,18 @@
         app:showAsAction="ifRoom"
         android:icon="@drawable/delete"
         />
+    <item
+        android:id="@+id/sortBY"
+        android:title="sort by"
+        app:showAsAction="never"
+        >
+        <menu>
+            <item
+                android:id="@+id/dateItem"
+                android:title="@string/date"/>
+            <item
+                android:id="@+id/praiorty"
+                android:title="praiority"/>
+        </menu>
+    </item>
 </menu>
