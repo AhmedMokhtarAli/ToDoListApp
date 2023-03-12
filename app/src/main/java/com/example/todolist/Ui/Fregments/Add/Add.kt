@@ -1,59 +1,57 @@
+
 package com.example.todolist.Ui.Fregments.Add
 
 import android.app.*
-import android.content.Context.ALARM_SERVICE
-import android.content.Intent
+import android.icu.text.SimpleDateFormat
 import android.icu.util.Calendar
 import android.os.Build
 import android.os.Bundle
 import android.text.TextUtils
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
-import android.widget.Toast
+import android.widget.*
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.example.todolist.model.Task
 import com.example.todolist.R
-import com.example.todolist.Ui.AlarmReciver
-import com.example.todolist.Ui.TaskDatePickerDialog
+import com.example.todolist.Ui.subFeature.Alarm
+import com.example.todolist.Ui.subFeature.TaskDatePickerDialog
 import com.example.todolist.ViewModel.TaskViewModel
 import com.example.todolist.databinding.FragmentAddBinding
+import java.util.*
 
+private const val TAG = "Add TASK"
 
-class Add : Fragment() {
+class Add : Fragment() ,DatePickerDialog.OnDateSetListener, TimePickerDialog.OnTimeSetListener {
     private lateinit var binding: FragmentAddBinding
     private lateinit var taskViewModel: TaskViewModel
     private lateinit var task: Task
     private lateinit var praiorties: Array<String>
     private var praiortySelected = 3
-    private lateinit var taskDatePickerDialog: TaskDatePickerDialog
-
-    private lateinit var alarmManager: AlarmManager
-    private lateinit var pendingIntent: PendingIntent
 
     private lateinit var calendar: Calendar
-    private var hour: Int = 0
+
+    private var year:Int=0
+    private var month:Int=0
+    private var day : Int=0
+    private var hour : Int =0
     private var minutes: Int = 0
+    private var date=Date()
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         binding = FragmentAddBinding.inflate(inflater)
 
         taskViewModel = ViewModelProvider(this).get(TaskViewModel::class.java)
 
-        getTime()
-
-        taskDatePickerDialog = TaskDatePickerDialog(context, Calendar.getInstance().time)
-        binding.dateBtn.setOnClickListener(View.OnClickListener {
-            taskDatePickerDialog.creatDatePickerDialog()?.show()
-        })
+        pickDate()
 
         binding.praiortyTV.onItemClickListener =
             AdapterView.OnItemClickListener { parent, view, position, id ->
@@ -62,8 +60,8 @@ class Add : Fragment() {
             }
 
 
-        binding.saveTask.setOnClickListener(View.OnClickListener {
-            creatAlarmDialog()
+        binding.saveTask.setOnClickListener({
+            creatAlarmDialog(calendar)
             saveTask()
         })
         return binding.root
@@ -76,28 +74,36 @@ class Add : Fragment() {
         binding.praiortyTV.setAdapter(praiortiesAdapter)
     }
 
-    fun getTime() {
+    fun getDateAndTime() {
         calendar = Calendar.getInstance()
-        hour = binding.taskTime.hour
-        minutes = binding.taskTime.minute
+        year=calendar.get(Calendar.YEAR)
+        month=calendar.get(Calendar.MONTH)
+        day=calendar.get(Calendar.DAY_OF_MONTH)
+        hour = calendar.get(Calendar.HOUR)
+        minutes = calendar.get(Calendar.MINUTE)
 
-        calendar[Calendar.HOUR_OF_DAY] = hour
-        calendar[Calendar.MINUTE] = minutes
+
+        date=calendar.time
+        Log.i(TAG, "getDateAndTime: ${calendar.time}")
+
+    }
+    fun pickDate(){
+        binding.dateBtn.setOnClickListener {
+            getDateAndTime()
+            Log.i(TAG, "pickDate: ${calendar.time}")
+            DatePickerDialog(requireContext(),this,year,month,day).show()
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.N)
     fun saveTask() {
-
         val taskName = binding.taskET.editText?.text.toString()
         val taskDetials = binding.taskDtialsET.editText?.text.toString()
-        val date = taskDatePickerDialog.getDate()
-        getTime()
+
 
         if (checkTask(taskName, taskDetials)) {
-            task = Task(0, taskName, taskDetials, date, hour, minutes, praiortySelected)
+            task = Task(0, taskName, taskDetials, date, praiortySelected)
             taskViewModel.addTask(task)
-            Toast.makeText(requireContext(), "task successfully added", Toast.LENGTH_LONG).show()
-            findNavController().navigate(R.id.action_add_to_tasks)
         } else {
             Toast.makeText(requireContext(), "Please fill all fildes", Toast.LENGTH_LONG).show()
         }
@@ -118,39 +124,41 @@ class Add : Fragment() {
         }
     }
 
-    private fun creatAlarmDialog() {
+    private fun creatAlarmDialog(calendar: Calendar) {
         val builder = AlertDialog.Builder(requireContext())
         builder.setPositiveButton("Yes") { _, _ ->
-            setAlarm()
+            setAlarm(calendar)
+            navigate()
         }
-        builder.setNegativeButton("No") { _, _ -> }
+        builder.setNegativeButton("No") { _, _ ->
+            navigate()
+        }
         builder.setTitle("Set Alarm")
         builder.setMessage("Are you sure you want to set alarm for this task ?")
         builder.create().show()
     }
-
-    fun setAlarm() {
-        alarmManager = activity?.getSystemService(ALARM_SERVICE) as AlarmManager
-        val intent = Intent(activity, AlarmReciver::class.java)
-        pendingIntent = PendingIntent.getBroadcast(activity, 0, intent, 0)
-
-        alarmManager.setRepeating(
-            AlarmManager.RTC_WAKEUP, calendar.timeInMillis,
-            AlarmManager.INTERVAL_DAY, pendingIntent
-        )
-        creatNotification()
+    fun setAlarm(calendar: Calendar) {
+        val alarm=Alarm(requireActivity())
+        alarm.start(calendar)
+    }
+    fun navigate(){
+        findNavController().navigate(R.id.action_add_to_tasks)
+        Toast.makeText(requireContext(), "task successfully added", Toast.LENGTH_LONG).show()
     }
 
-    fun creatNotification() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name: CharSequence = "ToDoReminder"
-            val description = "chanel for alarm manager"
-            val importence = NotificationManager.IMPORTANCE_HIGH
-            val channel = NotificationChannel("ToDoList", name, importence)
-            channel.description = description
-            val notificationManager = activity?.getSystemService(NotificationManager::class.java)
+    override fun onDateSet(datePicker: DatePicker?, year: Int, month: Int, day_of_month: Int) {
+        calendar.set(Calendar.YEAR,year)
+        calendar.set(Calendar.MONTH,month)
+        calendar.set(Calendar.DAY_OF_MONTH,day_of_month)
+        Log.i(TAG, "onDateSet: ${calendar.time}")
+        TimePickerDialog(requireContext(),this,hour,minutes,false).show()
+    }
 
-            notificationManager?.createNotificationChannel(channel)
-        }
+    override fun onTimeSet(timePicker: TimePicker?, hour: Int, minte: Int) {
+        calendar.set(Calendar.HOUR,hour)
+        calendar.set(Calendar.MINUTE,minte)
+        calendar.set(Calendar.SECOND,0)
+        date=calendar.time
+        Log.i(TAG, "onTimeSet: ${calendar.time}")
     }
 }

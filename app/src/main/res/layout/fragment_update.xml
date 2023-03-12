@@ -11,8 +11,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-
-
         <TextView
             android:id="@+id/update_task_TV"
             android:layout_width="wrap_content"
@@ -67,25 +65,17 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
-        <TimePicker
-            android:id="@+id/taskTimeUpdate"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@id/taskDtialsUpdateET"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:timePickerMode="spinner"
-            />
         <Button
             android:id="@+id/dateBtnUpdate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/_20sdp"
             android:background="@drawable/round_button"
-            android:text="@string/date"
+            android:text="task time"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/taskTimeUpdate" />
+            app:layout_constraintTop_toBottomOf="@id/taskDtialsUpdateET"
+            />
         <Button
             android:id="@+id/updateTaskBtn"
             android:layout_width="150dp"

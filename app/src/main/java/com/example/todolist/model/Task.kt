@@ -13,8 +13,6 @@ data class Task(
     var taskName: String,
     var taskDtailes: String,
     var date: Date,
-    var hour:Int,
-    var mintes:Int,
     var praiorty:Int,
     var completed: Boolean = false
 ):Parcelable

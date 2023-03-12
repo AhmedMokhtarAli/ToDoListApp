@@ -62,8 +62,8 @@
 
             <TextView
                 android:id="@+id/taskTime"
-                setHour="@{task.hour}"
-                setMinte="@{task.mintes}"
+                setHour="@{task.date.hours}"
+                setMinte="@{task.date.minutes}"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/_24sdp"
