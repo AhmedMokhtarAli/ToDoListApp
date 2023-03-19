@@ -40,7 +40,7 @@ class NotificationUtils(context: Context) : ContextWrapper(context) {
         return notificationManager as NotificationManager
     }
 
-    fun getNotificationBuilder():NotificationCompat.Builder{
+    fun getNotificationBuilder(taskName:String):NotificationCompat.Builder{
         val intent= Intent(this,ToDoActivity::class.java).apply {
             flags=Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
@@ -48,7 +48,7 @@ class NotificationUtils(context: Context) : ContextWrapper(context) {
         return NotificationCompat.Builder(applicationContext,CHANNEL_ID)
             .setSmallIcon(R.drawable.task)
             .setContentTitle("TODO")
-            .setContentText("you have a new task to do")
+            .setContentText(taskName)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))

@@ -2,7 +2,6 @@
 package com.example.todolist.Ui.Fregments.Add
 
 import android.app.*
-import android.icu.text.SimpleDateFormat
 import android.icu.util.Calendar
 import android.os.Build
 import android.os.Bundle
@@ -19,7 +18,6 @@ import androidx.navigation.fragment.findNavController
 import com.example.todolist.model.Task
 import com.example.todolist.R
 import com.example.todolist.Ui.subFeature.Alarm
-import com.example.todolist.Ui.subFeature.TaskDatePickerDialog
 import com.example.todolist.ViewModel.TaskViewModel
 import com.example.todolist.databinding.FragmentAddBinding
 import java.util.*
@@ -29,19 +27,17 @@ private const val TAG = "Add TASK"
 class Add : Fragment() ,DatePickerDialog.OnDateSetListener, TimePickerDialog.OnTimeSetListener {
     private lateinit var binding: FragmentAddBinding
     private lateinit var taskViewModel: TaskViewModel
-    private lateinit var task: Task
+
     private lateinit var praiorties: Array<String>
     private var praiortySelected = 3
 
     private lateinit var calendar: Calendar
-
     private var year:Int=0
     private var month:Int=0
     private var day : Int=0
     private var hour : Int =0
     private var minutes: Int = 0
     private var date=Date()
-
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -51,14 +47,15 @@ class Add : Fragment() ,DatePickerDialog.OnDateSetListener, TimePickerDialog.OnT
 
         taskViewModel = ViewModelProvider(this).get(TaskViewModel::class.java)
 
-        pickDate()
+        binding.dateBtn.setOnClickListener {
+            pickDate()
+        }
 
         binding.praiortyTV.onItemClickListener =
             AdapterView.OnItemClickListener { parent, view, position, id ->
                 val item = parent.getItemAtPosition(position).toString()
                 praiortySelected = getPraiorty(item)
             }
-
 
         binding.saveTask.setOnClickListener({
             creatAlarmDialog(calendar)
@@ -79,20 +76,17 @@ class Add : Fragment() ,DatePickerDialog.OnDateSetListener, TimePickerDialog.OnT
         year=calendar.get(Calendar.YEAR)
         month=calendar.get(Calendar.MONTH)
         day=calendar.get(Calendar.DAY_OF_MONTH)
-        hour = calendar.get(Calendar.HOUR)
+        hour = calendar.get(Calendar.HOUR_OF_DAY)
         minutes = calendar.get(Calendar.MINUTE)
-
 
         date=calendar.time
         Log.i(TAG, "getDateAndTime: ${calendar.time}")
 
     }
     fun pickDate(){
-        binding.dateBtn.setOnClickListener {
-            getDateAndTime()
-            Log.i(TAG, "pickDate: ${calendar.time}")
-            DatePickerDialog(requireContext(),this,year,month,day).show()
-        }
+        getDateAndTime()
+        Log.i(TAG, "pickDate: ${calendar.time}")
+        DatePickerDialog(requireContext(),this,year,month,day).show()
     }
 
     @RequiresApi(Build.VERSION_CODES.N)
@@ -102,7 +96,7 @@ class Add : Fragment() ,DatePickerDialog.OnDateSetListener, TimePickerDialog.OnT
 
 
         if (checkTask(taskName, taskDetials)) {
-            task = Task(0, taskName, taskDetials, date, praiortySelected)
+           val task = Task(0, taskName, taskDetials, date, praiortySelected)
             taskViewModel.addTask(task)
         } else {
             Toast.makeText(requireContext(), "Please fill all fildes", Toast.LENGTH_LONG).show()
@@ -127,7 +121,8 @@ class Add : Fragment() ,DatePickerDialog.OnDateSetListener, TimePickerDialog.OnT
     private fun creatAlarmDialog(calendar: Calendar) {
         val builder = AlertDialog.Builder(requireContext())
         builder.setPositiveButton("Yes") { _, _ ->
-            setAlarm(calendar)
+            val taskName=binding?.taskET?.editText?.text.toString()
+            setAlarm(calendar,taskName)
             navigate()
         }
         builder.setNegativeButton("No") { _, _ ->
@@ -137,9 +132,9 @@ class Add : Fragment() ,DatePickerDialog.OnDateSetListener, TimePickerDialog.OnT
         builder.setMessage("Are you sure you want to set alarm for this task ?")
         builder.create().show()
     }
-    fun setAlarm(calendar: Calendar) {
+    fun setAlarm(calendar: Calendar,taskName: String) {
         val alarm=Alarm(requireActivity())
-        alarm.start(calendar)
+        alarm.start(calendar, taskName )
     }
     fun navigate(){
         findNavController().navigate(R.id.action_add_to_tasks)
@@ -155,7 +150,7 @@ class Add : Fragment() ,DatePickerDialog.OnDateSetListener, TimePickerDialog.OnT
     }
 
     override fun onTimeSet(timePicker: TimePicker?, hour: Int, minte: Int) {
-        calendar.set(Calendar.HOUR,hour)
+        calendar.set(Calendar.HOUR_OF_DAY,hour)
         calendar.set(Calendar.MINUTE,minte)
         calendar.set(Calendar.SECOND,0)
         date=calendar.time

@@ -16,9 +16,10 @@ class Alarm(val activity: FragmentActivity) {
 
     private val REQUES_CODE: Int = 100
 
-    fun start(calendar: Calendar) {
+    fun start(calendar: Calendar,taskName:String) {
         alarmManager = activity?.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val intent = Intent(activity, AlarmReciver::class.java)
+        intent.putExtra("taskName",taskName)
         pendingIntent = PendingIntent.getBroadcast(
             activity,
             REQUES_CODE,
